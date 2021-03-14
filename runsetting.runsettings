@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <TestRunParameters>
+    <Parameter name="graphs" value="[{'Name':'SettingGraph','Nodes':[{'Id':'A'},{'Id':'B','ParentId':'A'}]}]" />
+    <Parameter name="sqlConnection" value="Server=DESKTOP-94A6JQ0\MSSQLSERVER01;Database=PlugAndTrade;Trusted_Connection=True;" />
+    <Parameter name="sqlConnection2" value="Server=DESKTOP-94A6JQ0\MSSQLSERVER01;Database=PlugAndTrade;User Id=pt;Password=kickass;" />
+  </TestRunParameters>
+</RunSettings>

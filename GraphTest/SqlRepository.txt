@@ -1,0 +1,96 @@
+﻿use PlugAndTrade
+
+IF OBJECT_ID('graphtester.GraphCreate') IS NOT NULL
+	drop procedure graphtester.GraphCreate	
+IF OBJECT_ID('graphtester.GraphGetAll') IS NOT NULL
+	drop procedure graphtester.GraphGetAll
+
+IF TYPE_ID('graphtester.GraphCreate_Node') IS NOT NULL
+	drop type graphtester.GraphCreate_Node
+
+IF OBJECT_ID('graphtester.Node') IS NOT NULL
+	drop table graphtester.Node
+IF OBJECT_ID('graphtester.Graph') IS NOT NULL
+	drop table graphtester.Graph
+
+IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'graphtester')
+	drop schema graphtester
+go
+
+create schema graphtester
+go
+
+create table graphtester.Graph
+(
+	GraphId int identity(1, 1) constraint PK_graphtester_Graph primary key,
+	Name nvarchar(256) 
+)
+go
+
+create table graphtester.Node
+(
+	GraphId int,
+	NodeId nvarchar(64) constraint PK_graphtester_Node primary key (GraphId, NodeId),
+	ParentNodeId nvarchar(64) null, constraint FK_graphtester_ParentNode foreign key (GraphId, ParentNodeId) references graphtester.Node (GraphId, NodeId)
+)
+go
+
+CREATE TYPE graphtester.GraphCreate_Node AS TABLE(
+	NodeId varchar(64) not null,
+	ParentNodeId varchar(64) null
+)
+go
+
+create procedure graphtester.GraphCreate
+	@Name nvarchar(256),
+	@Node graphtester.GraphCreate_Node readonly
+as
+begin
+	set nocount on
+
+	declare @GraphId int
+	insert into graphtester.Graph (Name) 
+	values (@Name)
+	
+	set @GraphId = @@IDENTITY
+
+	insert into graphtester.Node (GraphId, NodeId, ParentNodeId)
+	select @GraphId, NodeId, ParentNodeId
+	from @Node
+end
+go
+
+create procedure graphtester.GraphGetAll
+as
+begin
+	set nocount on
+
+	select g.GraphId, g.Name, n.NodeId, n.ParentNodeId
+	from graphtester.Graph g
+		inner join graphtester.Node n on n.GraphId = g.GraphId
+	order by g.GraphId
+
+end
+go
+
+
+
+set nocount on
+
+declare @Node graphtester.GraphCreate_Node
+insert into @Node values ('A', null)
+insert into @Node values ('B', 'A')
+
+exec graphtester.GraphCreate 'SqlGraph 1', @Node
+
+insert into @Node values ('C', 'B')
+insert into @Node values ('D', 'C')
+insert into @Node values ('X', 'Y')
+insert into @Node values ('Y', 'X')
+exec graphtester.GraphCreate 'SqlGraph 2', @Node
+
+--select * from graphtester.Graph
+--select * from graphtester.Node
+
+
+--select case when exists(SELECT * FROM sys.schemas WHERE name = 'graphtester') then 1 else 0 end as [exists]
